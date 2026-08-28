@@ -531,11 +531,14 @@ netlink_rtlist(list_head_t *rt_list, int cmd, bool force)
 
 	list_for_each_entry(ip_route, rt_list, e_list) {
 		if ((cmd == IPROUTE_DEL) == ip_route->set || force) {
+			if (force)
+				netlink_error_ignore = ESRCH;
 			if (!netlink_route(ip_route, cmd)) {
 				if (cmd == IPROUTE_DEL)
 					ip_route->set = false;
 			} else if (cmd != IPROUTE_ADD)
 				ip_route->set = false;
+			netlink_error_ignore = 0;
 		}
 	}
 

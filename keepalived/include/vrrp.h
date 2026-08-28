@@ -339,6 +339,7 @@ typedef struct _vrrp_t {
 #endif
 	unsigned		num_config_faults;	/* Number of configuration errors */
 	unsigned		num_track_fault;	/* Number of trackers (script, bfd...) in fault state */
+	unsigned		num_if_fault;		/* Number of tracked interfaces in fault state */
 	unsigned long		flags_if_fault;		/* Flags of interface fault */
 	unsigned		num_script_init;	/* Number of scripts in init state */
 	bool			notifies_sent;		/* Set when initial notifies have been sent */

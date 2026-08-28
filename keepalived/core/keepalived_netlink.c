@@ -1502,7 +1502,7 @@ netlink_talk(nl_handle_t *nl, struct nlmsghdr *n)
 	status = sendmsg(nl->fd, &msg, 0);
 	if (status < 0) {
 		log_message(LOG_INFO, "Netlink: sendmsg(%d) cmd %d error: %s", nl->fd, n->nlmsg_type,
-		       strerror(errno));
+			strerror(errno));
 		return -1;
 	}
 
@@ -1616,10 +1616,7 @@ process_if_status_change(interface_t *ifp)
 				try_up_instance(vrrp, false, VRRP_FAULT_FL_BASE_INTERFACE_DOWN);
 			else
 #endif
-			{
-				/* assuming there is only one tracked interface per vrrp : to be checked */
 				try_up_instance(vrrp, false, VRRP_FAULT_FL_INTERFACE_DOWN);
-			}
 		} else {
 #ifdef _HAVE_VRRP_VMAC_
 			if (__test_bit(VRRP_VMAC_BIT, &vrrp->flags) &&
@@ -2144,7 +2141,16 @@ netlink_link_filter(__attribute__((unused)) struct sockaddr_nl *snl, struct nlms
 	ifp = if_get_by_ifindex((ifindex_t)ifi->ifi_index);
 
 	if (ifp) {
-		if (h->nlmsg_type == RTM_DELLINK) {
+		/* ip link set eth0 nomaster causes an RTM_DELLINK message to be sent
+		 * with ifi->ifi_change == 0, even though the link is not being deleted.
+		 * It appears that a real link deletion sends an RTM_DELLINK message
+		 * with ifi_change == 0xffffffff, so treat an RTM_DELLINK message with
+		 * ifi_change != 0xffffffff the same as a RTM_NEWLINK message; RTM_NEWLINK
+		 * is normally used for any change to a link. */
+		if (h->nlmsg_type == RTM_DELLINK && ifi->ifi_change && ifi->ifi_change != 0xffffffff)
+			log_message(LOG_INFO, "%s: DELLINK with 0x%x change flags - treating as NEWLINK", name, ifi->ifi_change);
+
+		if (h->nlmsg_type == RTM_DELLINK && ifi->ifi_change == 0xffffffff) {
 			if ((!list_empty(&ifp->tracking_vrrp)) ||
 			    __test_bit(LOG_DETAIL_BIT, &debug))
 				log_message(LOG_INFO, "Interface %s deleted", ifp->ifname);
