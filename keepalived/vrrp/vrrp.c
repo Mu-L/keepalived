@@ -1997,6 +1997,7 @@ vrrp_restore_interface(vrrp_t * vrrp, bool advF, bool force)
 			log_message(LOG_INFO, "(%s) sent 0 priority", vrrp->iname);
 	}
 
+log_message(LOG_INFO, "vrrp restore_interface force %d", force);
 	/* remove virtual rules */
 	if (!list_empty(&vrrp->vrules))
 		vrrp_handle_iprules(vrrp, IPRULE_DEL, force);
@@ -2066,7 +2067,7 @@ vrrp_state_leave_master(vrrp_t * vrrp, bool advF)
 		return;
 	}
 
-	vrrp_restore_interface(vrrp, advF, false);
+	vrrp_restore_interface(vrrp, advF, vrrp->wantstate == VRRP_STATE_FAULT);
 	vrrp->state = vrrp->wantstate;
 
 	send_instance_notifies(vrrp);
