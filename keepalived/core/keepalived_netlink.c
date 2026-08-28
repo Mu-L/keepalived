@@ -1502,7 +1502,7 @@ netlink_talk(nl_handle_t *nl, struct nlmsghdr *n)
 	status = sendmsg(nl->fd, &msg, 0);
 	if (status < 0) {
 		log_message(LOG_INFO, "Netlink: sendmsg(%d) cmd %d error: %s", nl->fd, n->nlmsg_type,
-		       strerror(errno));
+			strerror(errno));
 		return -1;
 	}
 
