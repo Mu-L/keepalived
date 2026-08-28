@@ -545,16 +545,23 @@ static void
 set_fault(vrrp_t *vrrp, unsigned flag)
 {
 #ifdef _FAULT_FLAGS_CHECK_
-	if (flag != VRRP_FAULT_FL_TRACKER && __test_bit(flag, &vrrp->flags_if_fault))
+	if (flag != VRRP_FAULT_FL_TRACKER &&
+	    flag != VRRP_FAULT_FL_INTERFACE_DOWN &&
+	    __test_bit(flag, &vrrp->flags_if_fault))
 		log_message(LOG_INFO, "(%s) BUG - down_instance flag %u already set in 0x%lx", vrrp->iname, flag, vrrp->flags_if_fault);
 
 	if (!__test_bit(VRRP_FAULT_FL_TRACKER, &vrrp->flags_if_fault) != !vrrp->num_track_fault)
 		log_message(LOG_INFO, "(%s) BUG - set_fault - tracker flag 0x%lx does not match num_track_fault %u", vrrp->iname, vrrp->flags_if_fault, vrrp->num_track_fault);
+
+	if (!__test_bit(VRRP_FAULT_FL_INTERFACE_DOWN, &vrrp->flags_if_fault) != !vrrp->num_if_fault)
+		log_message(LOG_INFO, "(%s) BUG - set_fault - tracker flag 0x%lx does not match num_if_fault %u", vrrp->iname, vrrp->flags_if_fault, vrrp->num_if_fault);
 #endif
 
 	__set_bit(flag, &vrrp->flags_if_fault);
 	if (flag == VRRP_FAULT_FL_TRACKER)
 		vrrp->num_track_fault++;
+	else if (flag == VRRP_FAULT_FL_INTERFACE_DOWN)
+		vrrp->num_if_fault++;
 }
 
 void
@@ -782,11 +789,10 @@ initialise_interface_tracking_priorities(void)
 					vrrp->state = VRRP_STATE_FAULT;
 #ifdef _HAVE_VRRP_VMAC_
 					if (__test_bit(VRRP_VMAC_BIT, &vrrp->flags) && VRRP_CONFIGURED_IFP(vrrp) == ifp)
-							__set_bit(VRRP_FAULT_FL_BASE_INTERFACE_DOWN, &vrrp->flags_if_fault);
+						__set_bit(VRRP_FAULT_FL_BASE_INTERFACE_DOWN, &vrrp->flags_if_fault);
 					else
 #endif
-					   /* assuming there is only one tracked interface per vrrp : to be checked */
-						__set_bit(VRRP_FAULT_FL_INTERFACE_DOWN, &vrrp->flags_if_fault);
+						set_fault(vrrp, VRRP_FAULT_FL_INTERFACE_DOWN);
 				}
 			} else if (IF_FLAGS_UP(ifp)) {
 				if (top->weight > 0)

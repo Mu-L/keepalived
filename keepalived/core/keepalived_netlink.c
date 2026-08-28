@@ -1616,10 +1616,7 @@ process_if_status_change(interface_t *ifp)
 				try_up_instance(vrrp, false, VRRP_FAULT_FL_BASE_INTERFACE_DOWN);
 			else
 #endif
-			{
-				/* assuming there is only one tracked interface per vrrp : to be checked */
 				try_up_instance(vrrp, false, VRRP_FAULT_FL_INTERFACE_DOWN);
-			}
 		} else {
 #ifdef _HAVE_VRRP_VMAC_
 			if (__test_bit(VRRP_VMAC_BIT, &vrrp->flags) &&

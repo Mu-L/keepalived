@@ -2670,10 +2670,7 @@ del_vrrp_from_interface(vrrp_t *vrrp, interface_t *ifp)
 					__clear_bit(VRRP_FAULT_FL_BASE_INTERFACE_DOWN, &vrrp->flags_if_fault);
 				else
 #endif
-				{
-					   /* assuming there is only one tracked interface per vrrp : to be checked */
 					__clear_bit(VRRP_FAULT_FL_INTERFACE_DOWN, &vrrp->flags_if_fault);
-				}
 			}
 
 			top->type &= ~TRACK_VRRP_DYNAMIC;

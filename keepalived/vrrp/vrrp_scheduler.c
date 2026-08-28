@@ -701,11 +701,14 @@ try_up_instance(vrrp_t *vrrp, bool leaving_init, vrrp_fault_fl_t resolved_flag)
 	 * at the same time
 	 */
 #ifdef _FAULT_FLAGS_CHECK_
-	if (resolved_flag != VRRP_FAULT_FL_TRACKER && !__test_bit(resolved_flag, &vrrp->flags_if_fault))
+	if (!__test_bit(resolved_flag, &vrrp->flags_if_fault))
 		log_message(LOG_INFO, "(%s) BUG - try_up_instance flag %u not set in 0x%lx, leaving_init %d", vrrp->iname, resolved_flag, vrrp->flags_if_fault, leaving_init);
 
 	if (!__test_bit(VRRP_FAULT_FL_TRACKER, &vrrp->flags_if_fault) != !vrrp->num_track_fault)
 		log_message(LOG_INFO, "(%s) BUG - clear_fault - tracker flag 0x%lx does not match num_track_fault %u", vrrp->iname, vrrp->flags_if_fault, vrrp->num_track_fault);
+
+	if (!__test_bit(VRRP_FAULT_FL_INTERFACE_DOWN, &vrrp->flags_if_fault) != !vrrp->num_if_fault)
+		log_message(LOG_INFO, "(%s) BUG - clear_fault - tracker flag 0x%lx does not match num_if_fault %u", vrrp->iname, vrrp->flags_if_fault, vrrp->num_if_fault);
 #endif
 
 	if (leaving_init) {
@@ -715,6 +718,9 @@ try_up_instance(vrrp_t *vrrp, bool leaving_init, vrrp_fault_fl_t resolved_flag)
 		if (resolved_flag == VRRP_FAULT_FL_TRACKER) {
 			if (!--vrrp->num_track_fault)
 				__clear_bit(VRRP_FAULT_FL_TRACKER, &vrrp->flags_if_fault);
+		} else if (resolved_flag == VRRP_FAULT_FL_INTERFACE_DOWN) {
+			if (!--vrrp->num_if_fault)
+				__clear_bit(VRRP_FAULT_FL_INTERFACE_DOWN, &vrrp->flags_if_fault);
 		} else
 			__clear_bit(resolved_flag, &vrrp->flags_if_fault);
 	}
