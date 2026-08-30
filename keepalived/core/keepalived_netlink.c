@@ -1419,7 +1419,9 @@ netlink_parse_info(int (*filter) (struct sockaddr_nl *, struct nlmsghdr *),
 			    h->nlmsg_type != RTM_NEWLINK &&
 			    h->nlmsg_type != RTM_DELLINK &&
 			    h->nlmsg_type != RTM_NEWROUTE &&
-// Allow NEWADDR/DELADDR for ipvlans
+			    h->nlmsg_type != RTM_NEWADDR &&
+			    h->nlmsg_type != RTM_DELADDR &&
+// Allow NEWADDR/DELADDR for ipvlans - and for static_ipaddress for first address on interface
 			    nl != &nl_cmd && h->nlmsg_pid == nl_cmd.nl_pid)
 				continue;
 #endif
