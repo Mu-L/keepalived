@@ -2267,6 +2267,12 @@ vrrp_state_backup(vrrp_t *vrrp, const vrrphdr_t *hd, const char *buf, ssize_t bu
 			 * ms_down_timer had expired, we would have wanted MASTER state.
 			 * Now we have received a higher priority advert, we want to be in BACKUP state. */
 			vrrp->wantstate = VRRP_STATE_BACK;
+
+			/* A member added to the group by a reload runs its own
+			 * election. If it cannot win, the group cannot stay
+			 * MASTER. */
+			if (vrrp->sync && GROUP_STATE(vrrp->sync) == VRRP_STATE_MAST)
+				vrrp_sync_backup(vrrp);
 		} else {
 			/* !nopreempt and lower priority advert and any preempt delay timer has expired */
 			log_message(LOG_INFO, "(%s) received lower priority (%d) advert from %s - discarding", vrrp->iname, hd->priority, inet_sockaddrtos(&vrrp->pkt_saddr));
@@ -5235,12 +5241,18 @@ vrrp_complete_init(void)
 			if (sgroup->num_member_fault || sgroup->num_member_init)
 				continue;
 
-			have_master = true;
+			have_master = false;
 			list_for_each_entry(vrrp, &sgroup->vrrp_instances, s_list) {
+				/* An instance still in INIT state has no state to
+				 * contribute, it has not taken part in an election */
+				if (VRRP_ISUP(vrrp) && vrrp->state == VRRP_STATE_INIT)
+					continue;
 				if (vrrp->state != VRRP_STATE_MAST) {
 					have_master = false;
 					break;
 				}
+
+				have_master = true;
 			}
 			if (have_master)
 				sgroup->state = VRRP_STATE_MAST;
