@@ -57,6 +57,7 @@
 #include "keepalived_netlink.h"
 #ifdef _WITH_LVS_
 #include "check_api.h"
+#include "check_daemon.h"
 #endif
 #ifdef _WITH_VRRP_
 #include "vrrp_scheduler.h"
@@ -2664,7 +2665,10 @@ kernel_netlink_init(void)
 		init_interface_queue();
 #endif
 
-	netlink_address_lookup();
+#if !defined _ONE_PROCESS_DEBUG_ && defined _WITH_LVS_
+	if (prog_type != PROG_TYPE_CHECKER || using_ha_suspend)
+#endif
+		netlink_address_lookup();
 
 #if !defined _ONE_PROCESS_DEBUG_ && defined _WITH_LVS_
 	if (prog_type == PROG_TYPE_CHECKER)
@@ -2687,11 +2691,7 @@ kernel_netlink_read_interfaces(void)
 {
 	int ret;
 
-#ifdef _WITH_VRRP_
 	netlink_socket(&nl_cmd, global_data->vrrp_netlink_cmd_rcv_bufs, global_data->vrrp_netlink_cmd_rcv_bufs_force, 0, 0);
-#else
-	netlink_socket(&nl_cmd, global_data->lvs_netlink_cmd_rcv_bufs, global_data->lvs_netlink_cmd_rcv_bufs_force, 0, 0);
-#endif
 
 	if (nl_cmd.fd < 0)
 		fprintf(stderr, "Error while registering Kernel netlink cmd channel\n");

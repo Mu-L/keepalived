@@ -378,7 +378,7 @@ misc_check_child_thread(thread_ref_t thread)
 			 * Catch legacy case of status being 0 but misc_dynamic being set.
 			 */
 			if (status != misck_checker->last_exit_code) {
-				effective_weight = checker->rs->effective_weight - checker->cur_weight;
+				effective_weight = checker->rs->effective_weight - (misck_checker->last_exit_code ? misck_checker->last_exit_code - 2 - checker->rs->iweight : 0);
 				checker->cur_weight = status ? status - 2 - checker->rs->iweight : 0;
 				effective_weight += checker->cur_weight;
 				update_svr_wgt(effective_weight, checker->vs, checker->rs, true);
